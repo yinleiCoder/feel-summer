@@ -1,0 +1,273 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand: var(--brand-accent);
+  --color-brand-from: var(--brand-from);
+  --color-brand-to: var(--brand-to);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-geist-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-column-todo: var(--column-todo);
+  --color-column-todo-edge: var(--column-todo-edge);
+  --color-column-doing: var(--column-doing);
+  --color-column-doing-edge: var(--column-doing-edge);
+  --color-column-done: var(--column-done);
+  --color-column-done-edge: var(--column-done-edge);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  /* 站点主色，字面值和 StaggeredMenu 的 colors、ProfileForm 的 BRAND_FROM/BRAND_TO
+     是同一对。--brand-accent 是它们在各自主题下的「可用版本」：深色下 #5227FF
+     压在近黑底上几乎看不出是紫色，所以深色用提亮过的一档。 */
+  --brand-from: #b497cf;
+  --brand-to: #5227ff;
+  --brand-accent: #5227ff;
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  /* 0.556 时白底上只有 4.74:1 —— 刚好卡在 AA 线上，于是任何一点透明度都会掉下去，
+     这就是 text-muted-foreground/60 实测只有 2.18:1 的原因。
+     压到 0.42 之后本体是 8.3:1，留出余量，/80 那一档落在 4.8:1。
+     0.44 时 /80 只有 4.24:1，差一点点 —— 而 /80 那些多半是 11px 的小字，
+     又常常落在带色的栏底上（不是纯白），余量必须按带色底算，不能按白底算。 */
+  --muted-foreground: oklch(0.42 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* 看板三栏的底色。
+     站点的调色板是「无彩 + 品牌紫」，而浅色下 --card 就是纯白 —— 三栏原来用
+     bg-card/40，等于白底上再铺一层白，和页面完全融在一起。
+     这里破例引入三个色相：一眼看出任务在哪一栏是这个页面的主要功能，灰阶做不到。
+     饱和度压得很低，读起来是「有色的纸」而不是彩色方块 —— 卡片自己仍是 --card，
+     所以正文对比度一点没变。三个色相拉开到 255 / 75 / 158，不靠明度硬凑区分度。
+
+     这里的 chroma 比深色那套小一个数量级，不是笔误：浅色底在 L≈0.96，
+     已经贴着 sRGB 的上边界，同色相能容纳的彩度就那么点，再往上加会被裁掉、色相还会偏。
+     两套值各自在自己那端配平过，不要互相抄。 */
+  --column-todo: oklch(0.962 0.011 255);
+  --column-todo-edge: oklch(0.895 0.035 255);
+  --column-doing: oklch(0.965 0.035 75);
+  --column-doing-edge: oklch(0.895 0.062 75);
+  --column-done: oklch(0.958 0.028 158);
+  --column-done-edge: oklch(0.885 0.052 158);
+}
+
+.dark {
+  /* 底色从 0.145 抬到 0.178（≈ #111016）。
+     原来那个 0.145 不是随手填的 —— 它就是 shadcn/ui 的默认暗色底，等于 Tailwind 的
+     neutral-950（#0A0A0A）。也就是说「太黑」不是配错了，是落在了默认值上。
+     抬到 #121212 一带是 Material 给暗色模式定的公认下限，理由正好对上这个感受：
+     纯黑附近没有余量再往上提，而阴影在纯黑上根本看不见 —— 层次只能靠明度，
+     纯黑把这条路堵死了；亮字在纯黑上还会有光晕（halation），OLED 滚动会拖影。
+
+     注意是整个表面阶梯一起 +0.033，不是只抬背景。只抬背景的话卡片从 0.205
+     变成只比它高 0.027，卡片会直接塌进背景里。
+
+     顺便加了一丝紫调（hue 285，朝品牌紫 #8b7bff 的方向，Tailwind 的 zinc 也是
+     这个做法）：chroma 0.006 基本看不出是紫色，但纯灰在近黑处会显得「死」。
+     不喜欢这个调子的话，把三个 chroma 改回 0 即可，不影响明度关系。 */
+  --background: oklch(0.178 0.006 285);
+  --foreground: oklch(0.985 0 0);
+  --brand-accent: #8b7bff;
+  --card: oklch(0.238 0.006 285);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.238 0.006 285);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.302 0.008 285);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.302 0.008 285);
+  /* 深色下原来 0.708（对 #111114 是 7.3:1），本体够用，但一降透明度就掉得厉害：
+     /60 实测只有 3.19:1。抬到 0.74 之后 /80 那一档是 5.0:1。
+     注意深色和浅色的「档位」不能互相抄：浅色要压到 0.42 才够，因为白底把
+     上界顶得很高；深色底几乎全黑，同样的对比度需要的数值完全不同。
+     两边都是按「带色表面上的最差一处」量的，不是按各自的纯底色。 */
+  --muted-foreground: oklch(0.74 0 0);
+  --accent: oklch(0.302 0.008 285);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.238 0.006 285);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.302 0.008 285);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+
+  /* 深色下三栏要比页面底色（0.178）亮、又要比卡片（0.238）暗，
+     卡片才会仍然像「浮在栏里」而不是陷进去。
+     全站表面 +0.033 那一抬，这三栏也跟着抬（0.196→0.229 等），偏移量维持 +0.051 不变：
+     三栏和页面、卡片的关系是**相对**的，页面抬了它俩不抬，卡片就会塌进栏里。
+     明度就维持在这个窄区间里 —— 深浅关系不能动，一压暗三栏就又和页面糊在一起了。
+     区分度全部交给彩度：原来的 0.012 / 0.030 / 0.024 在近黑底上几乎读不出颜色，
+     看着就是一块浅一点的灰面板。
+
+     三个 chroma 数值差得很多，是因为 OKLCH 的 C 不是等感的 —— 实测（读
+     getComputedStyle 的 lab 值算 C* = √(a²+b²)）。换算系数**既随色相变、也随明度变**，
+     所以底色一抬，这三个数就得重算一遍，不能沿用。当前明度（栏 L*≈10.4–11.0）下：
+       h255 蓝    C* ≈ 351 × C
+       h75  琥珀  C* ≈ 370 × C
+       h158 绿   C* ≈ 356 × C
+     定的是三栏底色 C* 都落在 13 附近，描边落在 19 附近。
+
+     改这几个数之前先量一遍。第一版凭「黄橙更显眼所以给低一档」去估，
+     估出来琥珀仍是蓝的两倍；更早一次「量过」的数据则是 dev server 编译产物
+     过期时读到的，拿它当基线推出来的目标全是错的 —— 而且这个 server 有个稳定
+     复现的毛病：globals.css 的**最后一次改动不会被编译**，要再改一次才带上。 */
+  --column-todo: oklch(0.229 0.037 255);
+  --column-todo-edge: oklch(0.338 0.054 255);
+  --column-doing: oklch(0.233 0.035 75);
+  --column-doing-edge: oklch(0.343 0.045 75);
+  --column-done: oklch(0.227 0.0365 158);
+  --column-done-edge: oklch(0.333 0.054 158);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ── 主题切换的过渡 ──────────────────────────────────────────────────────────
+   换主题就是给 <html> 换一套变量，一帧之内所有用到它们的声明同时改值 ——
+   不铺过渡，画面上就是硬切。
+
+   过渡只在切换的那一下生效：theme store 写值前挂上 .theme-transition，
+   480ms 后摘掉（见 lib/store/theme-store.js）。常驻的话，平时的 hover
+   也会被拖成 480ms。
+
+   只列颜色类属性。GSAP 的进场动画是逐帧写内联 opacity / transform 的，
+   把它们也纳入过渡，等于每一帧再平滑一次，动画会糊掉。
+
+   渐变不在这里 —— background-image 不是可过渡属性。渐变要跟着走，只能让
+   组成它的变量自己过渡，见下面注册的 --background。以后谁把新变量放进
+   渐变停靠点，也要在 @property 里补一条。 */
+@property --background {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: oklch(1 0 0);
+}
+
+html.theme-transition {
+  transition:
+    background-color 480ms ease-in-out,
+    border-color 480ms ease-in-out,
+    color 480ms ease-in-out,
+    --background 480ms ease-in-out !important;
+}
+
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition:
+    background-color 480ms ease-in-out,
+    border-color 480ms ease-in-out,
+    color 480ms ease-in-out,
+    fill 480ms ease-in-out,
+    stroke 480ms ease-in-out,
+    box-shadow 480ms ease-in-out,
+    outline-color 480ms ease-in-out,
+    text-decoration-color 480ms ease-in-out !important;
+}
+
+/* 工牌正面是把下面这个隐藏节点截图截出来的贴图。它必须跳过过渡：
+   截到一半的颜色会被烘进贴图，卡面就永远差着那一截。 */
+html.theme-transition [data-theme-snapshot],
+html.theme-transition [data-theme-snapshot] *,
+html.theme-transition [data-theme-snapshot] *::before,
+html.theme-transition [data-theme-snapshot] *::after {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: none !important;
+  }
+}

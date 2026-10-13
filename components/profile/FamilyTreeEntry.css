@@ -1,0 +1,43 @@
+/* 资料页上的「家庭关系图」入口。
+ *
+ * 卡片下缘那条流动线是故意的：它就是功能本身的样子 ——
+ * 画布里直系亲属用的正是同一组虚线节奏（2px 实 / 10px 空 / 900ms 一轮）。
+ * 入口先把招牌动作演一遍，点进去之后就不会觉得那个动画是凭空冒出来的。 */
+
+.family-entry__ants {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--brand-accent) 0 2px,
+    transparent 2px 12px
+  );
+  opacity: 0;
+  transition: opacity 280ms ease;
+  animation: family-entry-ants 900ms linear infinite;
+}
+
+.family-entry:hover .family-entry__ants,
+.family-entry:focus-visible .family-entry__ants {
+  opacity: 0.85;
+}
+
+/* 位移量必须等于虚线周期（12px），否则每循环一次就会跳一下。
+   和画布上那条 SVG 的规则是同一个道理，只是换成了 background-position。 */
+@keyframes family-entry-ants {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .family-entry__ants {
+    animation: none;
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,211 @@
+/* React Flow 的皮肤。
+ *
+ * 两条原则：
+ * 1. 不传 colorMode。它给 .react-flow 根元素加的字面类名就是 `dark`/`light`，
+ *    而本项目的暗色变体是 `@custom-variant dark (&:is(.dark *))` —— 画布里多一个
+ *    自说自话的 `.dark`，节点内部所有 dark: 工具类都会跟应用主题对不上。
+ *    改成在这里把 --xy-* 一组变量接到本项目的 token 上，行为完全可预测。
+ * 2. 节点和边的外观由组件自己画，这里只管 React Flow 自己会画的那几样：
+ *    网格、控制条、小地图、选择框、手柄、署名。 */
+
+/* 选择器必须是 `.family-canvas .react-flow`，不能只写 `.family-canvas`。
+   React Flow 把这一整组 --xy-*-default 变量声明在 `.react-flow` 自己身上，
+   而 `.react-flow` 是 `.family-canvas` 的子元素 —— 子元素自己声明的值会盖过
+   从父元素继承下来的值。写在父级上看起来合理，实际一条都不生效：
+   小地图会是白的、手柄会是默认色，而且不会报任何错。
+   多一层选择器换来的是 (0,2,0) > (0,1,0)，稳稳压过它。 */
+.family-canvas .react-flow {
+  --xy-background-color: var(--background);
+  --xy-background-pattern-dots-color: var(--border);
+
+  --xy-edge-stroke: var(--border);
+  --xy-edge-stroke-width: 1.5;
+  --xy-edge-stroke-selected: var(--brand-accent);
+
+  --xy-connectionline-stroke: var(--brand-accent);
+  --xy-connectionline-stroke-width: 2;
+
+  --xy-handle-background-color: var(--brand-accent);
+  --xy-handle-border-color: var(--background);
+
+  --xy-selection-background-color: color-mix(in oklab, var(--brand-accent) 10%, transparent);
+  --xy-selection-border: 1px dashed color-mix(in oklab, var(--brand-accent) 55%, transparent);
+
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--muted);
+  --xy-controls-button-color: var(--muted-foreground);
+  --xy-controls-button-color-hover: var(--foreground);
+  --xy-controls-button-border-color: var(--border);
+  --xy-controls-box-shadow: 0 0 0 1px var(--border);
+
+  --xy-minimap-background-color: var(--card);
+  --xy-minimap-node-background-color: var(--border);
+  --xy-minimap-node-stroke-width: 0;
+  --xy-minimap-mask-background-color: color-mix(in oklab, var(--background) 68%, transparent);
+  --xy-minimap-mask-stroke-color: color-mix(in oklab, var(--brand-accent) 45%, transparent);
+  --xy-minimap-mask-stroke-width: 1;
+
+  --xy-attribution-background-color: transparent;
+}
+
+/* 署名：React Flow 的 MIT 授权要求保留，所以只把它调得安静一点，不隐藏。
+   注意「静」和「看不见」是两回事 —— 它得仍然读得出来。 */
+.family-canvas .react-flow__attribution {
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.family-canvas .react-flow__attribution a {
+  color: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+/* 手柄：平时收起来，鼠标到节点上或节点被选中时才浮出来。
+   二十来个节点每个都挂着四个小圆点，读起来全是噪点。 */
+.family-canvas .react-flow__handle {
+  width: 9px;
+  height: 9px;
+  border-width: 2px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.family-canvas .react-flow__node:hover .react-flow__handle,
+.family-canvas .react-flow__node.selected .react-flow__handle,
+.family-canvas .react-flow__handle.connectingfrom,
+.family-canvas .react-flow__handle.connectingto {
+  opacity: 1;
+}
+
+/* 触摸设备没有 hover，「拖别的节点来连我」这条路径也就无从谈起，
+   索性常显，否则手柄永远不出来。 */
+@media (hover: none) {
+  .family-canvas .react-flow__handle {
+    opacity: 1;
+  }
+}
+
+/* ---- 边 ------------------------------------------------------------------ */
+
+.family-edge__base {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+
+.family-edge.is-lineal .family-edge__base {
+  stroke: color-mix(in oklab, var(--brand-accent) 40%, transparent);
+}
+
+.family-edge.is-selected .family-edge__base {
+  stroke: var(--brand-accent);
+  stroke-width: 2;
+}
+
+/* 直系边背后的一层光晕。宽度大、透明度低，再 blur 一点，
+   目的是让这条线「发亮」而不是「变粗」。 */
+.family-edge__glow {
+  fill: none;
+  stroke: var(--brand-accent);
+  stroke-width: 9;
+  stroke-linecap: round;
+  opacity: 0.18;
+  filter: blur(4px);
+}
+
+/* 蚂蚁流动线本体。
+ *
+ * 三个数必须互相咬合，改一个就要一起改：
+ *   周期 = 5 + 11 = 16px，位移量也是 16px —— 不等的话每循环一次会「咯噔」跳一下。
+ *   速度 = 16px / 500ms = 32px/s，也就是每秒走两个周期，看得出在走。
+ *
+ * 这套数是被实测逼出来的，不是随手挑的：
+ *   - 第一版是 `1 11`（1px 的点）配 900ms，只有 13px/s。缺点是两点：
+ *     点太小，看起来就是一条虚线；走得太慢，一秒才挪一个周期，静态截图和
+ *     动图几乎没区别。用户的原话是「没有流动的效果」。
+ *   - 更关键的是周期长度：配偶之间只隔 24px，减去两个手柄，实际线长只有 **15px**，
+ *     比一个周期还短。那种边上「流动」根本无从谈起，只有一个点在原地。
+ *     现在 15px ≈ 一个周期，亮点会明显地进来、出去。
+ *   短划从 1px 加到 5px、线宽从 2 加到 3，是为了让它在细线旁边有存在感 ——
+ *   圆头笔帽还会往两头各撑出 1.5px，实际每一节约 8px。
+ */
+.family-edge__ants {
+  fill: none;
+  stroke: var(--brand-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 5 11;
+  animation: family-ants 500ms linear infinite;
+}
+
+@keyframes family-ants {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+/* 前庭功能敏感的用户关掉动画之后，这条边必须仍然读得出是「直系」——
+   所以退化成一条实心虚线，而不是直接不动（静止的蚂蚁线看起来就是断线）。 */
+@media (prefers-reduced-motion: reduce) {
+  .family-edge__ants {
+    animation: none;
+    stroke-dasharray: 9 7;
+    stroke-width: 3;
+  }
+}
+
+/* 小地图。用后代选择器压过 .react-flow__minimap 自带的定位样式 ——
+   比在 JSX 里堆一串 !important 好读，也不用跟 Tailwind 的 important 语法较劲。 */
+/* 4:3 —— 和 React Flow 给 MiniMap 的 svg 的默认 viewBox 比例一致。
+   比例对不上的话，svg 会按 preserveAspectRatio 加黑边。 */
+.family-canvas .family-minimap {
+  margin: 1rem;
+  width: 10rem;
+  height: 7.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.family-canvas .family-minimap svg {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* 手机上小地图纯属占地：屏幕本来就只够放两三个节点，
+   再切掉一块角，画布就更没地方了。 */
+@media (max-width: 640px) {
+  .family-canvas .family-minimap {
+    display: none;
+  }
+}
+
+/* ---- 浮层 ---------------------------------------------------------------- */
+
+/* 工具条、图例、空状态引导都用同一张「玻璃」。 */
+.family-glass {
+  /* 前缀那条必须写在前面：反过来 Lightning CSS 会把两条一起丢掉，
+     而且不报任何警。见 components/StaggeredMenu.css 里同样的注释。 */
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+}
+
+/* 图例里那条流动线的小样，跟画布上的边共用同一组关键帧和同一组数 ——
+   这里和 .family-edge__ants 必须保持一致，否则图例在撒谎。 */
+.family-legend__sample {
+  stroke-dasharray: 5 11;
+  animation: family-ants 500ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .family-legend__sample {
+    animation: none;
+    stroke-dasharray: 9 7;
+  }
+}

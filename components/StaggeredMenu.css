@@ -1,0 +1,441 @@
+.staggered-menu-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.staggered-menu-wrapper.fixed-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 40;
+  overflow: hidden;
+}
+
+.staggered-menu-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 1em vertical, not the registry original's 2em: 92px of bar for a wordmark and
+     a 28px toggle is a lot of empty band, and every page then had to reserve
+     112px of top padding to clear it. This lands the bar at ~60px. */
+  padding: 1em 1.5em;
+  pointer-events: none;
+  z-index: 20;
+
+  /* Everything above is the registry original, which left the bar fully
+     transparent. That only ever looked right because the home page's hero
+     happens to be dark behind it — on /album the photos scroll straight under
+     the wordmark and the bar reads as missing. Give it a real backdrop: a
+     theme-aware tint plus a blur, so content passing underneath is legible
+     rather than competing with the text.
+
+     --background is the same token globals.css flips between :root and .dark,
+     so this follows the theme picker without a second source of truth. */
+  background: color-mix(in oklab, var(--background) 72%, transparent);
+  /* Order matters here, and not for the usual reason. Lightning CSS (which the
+     Tailwind v4 loader runs on every *.css) DROPS BOTH declarations when the
+     unprefixed one comes first — the computed style ends up as `none` and the
+     rule silently ships without any blur. Prefixed-first is what survives; it is
+     also the order ProfileCard.css uses, which is why that one still works. */
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  border-bottom: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+
+/* Menu open: the panel is white and slides in *underneath* this bar (panel z-index
+   10, header 20), so a tinted bar would band across the top of it. Hand the space
+   back to the panel — same reason the wordmark and actions flip to #111111 below. */
+.staggered-menu-wrapper[data-open] .staggered-menu-header {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+
+.staggered-menu-header > * {
+  pointer-events: auto;
+}
+
+.sm-logo {
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+/* The bar's right-hand block: extra controls (the theme toggle) plus the menu
+   button, so the header stays a two-child space-between row. */
+.sm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+/* On desktop the panel takes the right edge and slides in under the header, so this
+   block ends up on the panel rather than on the page. The panel is white on both
+   themes, hence the same flip the menu button gets through `openMenuButtonColor` —
+   without it a light-coloured toggle disappears into the open panel. */
+.staggered-menu-wrapper[data-open] .sm-header-actions {
+  color: #111111;
+}
+
+.sm-logo-brand {
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  /* Follows the page theme rather than being pinned light: the brand sits on the
+     page background, which is white as soon as the visitor switches to light. The
+     small-screen rules below flip it to dark regardless, because there the panel
+     covers the whole viewport. */
+  color: var(--foreground);
+  transition: color 0.3s ease;
+}
+
+.sm-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  /* First paint only — GSAP overwrites this inline from the `menuButtonColor` prop,
+     which is why the prop (not this rule) is what actually tracks the theme. */
+  color: var(--foreground);
+  font-weight: 500;
+  line-height: 1;
+  overflow: visible;
+}
+
+.sm-toggle:focus-visible {
+  outline: 2px solid #ffffffaa;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.sm-line:last-of-type {
+  margin-top: 6px;
+}
+
+.sm-toggle-textWrap {
+  position: relative;
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+  width: var(--sm-toggle-width, auto);
+  min-width: var(--sm-toggle-width, auto);
+}
+
+.sm-toggle-textInner {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.sm-toggle-line {
+  display: block;
+  height: 1em;
+  line-height: 1;
+}
+
+.sm-icon {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+.sm-panel-itemWrap {
+  position: relative;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.sm-icon-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+.sm-line {
+  display: none !important;
+}
+
+.staggered-menu-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: clamp(260px, 38vw, 420px);
+  height: 100%;
+  background: white;
+  /* Prefixed-first — see the note on .staggered-menu-header. This one was already
+     being dropped before the bar ever got a backdrop, so the panel's frost has
+     never actually been visible either. */
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  /* Clears the ~60px header with room to spare; was 6em against a 92px one. */
+  padding: 4.5em 2em 2em 2em;
+  overflow-y: auto;
+  z-index: 10;
+  pointer-events: auto;
+  opacity: 0;
+}
+
+[data-position='left'] .staggered-menu-panel {
+  right: auto;
+  left: 0;
+}
+
+/* The panel is white, so on the light theme it and the page behind it are the same
+   colour and it stops reading as a surface. On the dark theme the contrast already
+   does that job, so the shadow is only worth drawing where it is needed. `data-theme`
+   is written to <html> by the theme store and by the pre-paint script. */
+[data-theme='light'] .staggered-menu-panel {
+  box-shadow: -10px 0 40px rgb(0 0 0 / 0.09);
+}
+
+.sm-prelayers {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: clamp(260px, 38vw, 420px);
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+}
+
+[data-position='left'] .sm-prelayers {
+  right: auto;
+  left: 0;
+}
+
+.sm-prelayer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  transform: translateX(0);
+  opacity: 0;
+}
+
+.sm-panel-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sm-socials {
+  margin-top: auto;
+  padding-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sm-socials-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--sm-accent, #ff0000);
+}
+
+.sm-socials-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sm-socials-list .sm-socials-link {
+  opacity: 1;
+}
+
+.sm-socials-list:hover .sm-socials-link {
+  opacity: 0.35;
+}
+
+.sm-socials-list:hover .sm-socials-link:hover {
+  opacity: 1;
+}
+
+.sm-socials-link:focus-visible {
+  outline: 2px solid var(--sm-accent, #ff0000);
+  outline-offset: 3px;
+}
+
+.sm-socials-list:focus-within .sm-socials-link {
+  opacity: 0.35;
+}
+
+.sm-socials-list:focus-within .sm-socials-link:focus-visible {
+  opacity: 1;
+}
+
+.sm-socials-link {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #111;
+  text-decoration: none;
+  position: relative;
+  padding: 2px 0;
+  display: inline-block;
+  transition:
+    color 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.sm-socials-link:hover {
+  color: var(--sm-accent, #ff0000);
+}
+
+.sm-panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.sm-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sm-panel-item {
+  position: relative;
+  color: #000;
+  font-weight: 600;
+  font-size: 3.5rem;
+  cursor: pointer;
+  line-height: 1;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  transition:
+    background 0.25s,
+    color 0.25s;
+  /* Block + full width: the ::after index is positioned from the item's right edge,
+     and short CJK labels leave an inline-block too narrow for it to clear the text. */
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  padding-right: 1.4em;
+}
+
+/* The action variant (退出) renders as a <button>, which carries UA defaults a
+   <Link> does not — a grey background, a border, its own font, centred text and
+   its own padding. Those are not covered by the rule above, so the button would
+   sit visibly inset next to the link items. Clear them and keep the same
+   padding-right the index number is positioned against. */
+button.sm-panel-item {
+  background: none;
+  border: 0;
+  padding: 0 1.4em 0 0;
+  font-family: inherit;
+  text-align: left;
+}
+
+.staggered-menu-panel .sm-socials-list .sm-socials-link {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.staggered-menu-panel .sm-socials-list:hover .sm-socials-link:not(:hover) {
+  opacity: 0.35;
+}
+
+.staggered-menu-panel .sm-socials-list:focus-within .sm-socials-link:not(:focus-visible) {
+  opacity: 0.35;
+}
+
+.staggered-menu-panel .sm-socials-list .sm-socials-link:hover,
+.staggered-menu-panel .sm-socials-list .sm-socials-link:focus-visible {
+  opacity: 1;
+}
+
+.sm-panel-itemLabel {
+  display: inline-block;
+  will-change: transform;
+  transform-origin: 50% 100%;
+}
+
+.sm-panel-item:hover {
+  color: var(--sm-accent, #5227ff);
+}
+
+.sm-panel-list[data-numbering] {
+  counter-reset: smItem;
+}
+
+.sm-panel-list[data-numbering] .sm-panel-item::after {
+  counter-increment: smItem;
+  content: counter(smItem, decimal-leading-zero);
+  position: absolute;
+  top: 0.1em;
+  right: 2.8em;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--sm-accent, #5227ff);
+  letter-spacing: 0;
+  pointer-events: none;
+  user-select: none;
+  opacity: var(--sm-num-opacity, 0);
+}
+
+@media (max-width: 1024px) {
+  .staggered-menu-panel {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  /* Panel is full-bleed here, so the wordmark sits on white, not on the page. */
+  .staggered-menu-wrapper[data-open] .sm-logo-brand {
+    color: #111111;
+  }
+}
+
+@media (max-width: 640px) {
+  .staggered-menu-panel {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  /* Panel is full-bleed here, so the wordmark sits on white, not on the page. */
+  .staggered-menu-wrapper[data-open] .sm-logo-brand {
+    color: #111111;
+  }
+}

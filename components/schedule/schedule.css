@@ -1,0 +1,86 @@
+/*
+ * FullCalendar v7 的 classic 主题调色板 —— fork 版。
+ *
+ * 为什么是 fork 而不是「先 import 官方 palette.css 再覆盖」：
+ * 官方调色板把深色值写在 `[data-color-scheme=dark]` 下面，而本站的深色开关是
+ * <html class="dark">（见 app/globals.css 的 @custom-variant）。v7 文档明确说了，
+ * 用类名/自定义选择器声明深色模式时，直接覆盖 --fc-* 不生效，必须 fork 调色板
+ * 把那个选择器改掉。
+ *
+ * 但这里更进一步：干脆不写深色块。全部映射到站内 token（--background、
+ * --foreground、--border…），主题切换交给 .dark 自己翻转 —— 少一份需要同步维护
+ * 的颜色表，浅色主题也就自动跟着对了。
+ *
+ * 变量名来自 node_modules/@fullcalendar/react/themes/classic/palette.css
+ * （v7 文档的 theming 页只有目录，没有变量清单）。
+ *
+ * 注意必须挂在 :root：拖动时的镜像元素被挂到 <body> 下、在日历容器之外，
+ * 作用域收在容器里的话镜像会掉色。
+ */
+
+:root {
+  /* primary —— 品牌紫。选中态、今天、焦点环都取这一支。 */
+  --fc-classic-primary: var(--brand-accent);
+  --fc-classic-primary-foreground: #fff;
+
+  /* calendar content */
+  --fc-classic-event: var(--fc-classic-primary);
+  --fc-classic-event-contrast: var(--fc-classic-primary-foreground);
+  --fc-classic-background-event: var(--brand-from);
+  --fc-classic-background-event-opacity: 15%;
+  --fc-classic-background-event-foreground-opacity: 50%;
+
+  /* 框选时那块高亮 —— 本次最关键的视觉反馈，给足品牌色。 */
+  --fc-classic-highlight: color-mix(in oklab, var(--brand-accent) 32%, transparent);
+  /* 今天那一列 */
+  --fc-classic-today: color-mix(in oklab, var(--brand-accent) 10%, transparent);
+  /* 当前时间的红线 */
+  --fc-classic-now: var(--destructive);
+
+  /* neutral backgrounds */
+  --fc-classic-background: var(--background);
+  --fc-classic-faint: color-mix(in oklab, var(--foreground) 4%, transparent);
+  --fc-classic-muted: color-mix(in oklab, var(--foreground) 8%, transparent);
+  --fc-classic-strong: color-mix(in oklab, var(--foreground) 14%, transparent);
+
+  /* neutral foregrounds */
+  --fc-classic-foreground: var(--foreground);
+  --fc-classic-faint-foreground: color-mix(in oklab, var(--muted-foreground) 55%, transparent);
+  --fc-classic-muted-foreground: var(--muted-foreground);
+
+  /* neutral borders */
+  --fc-classic-border: var(--border);
+  --fc-classic-strong-border: color-mix(in oklab, var(--foreground) 24%, transparent);
+
+  /* 非颜色：月视图「+N 更多」那几个小圆点的直径。
+     theme.css 里是 border-width: calc(var(--fc-classic-*-dot-width) / 2)，**没有
+     fallback** —— 不定义的话 calc 里是空的，border-width 整条失效，圆点直接看不见。
+     这两个是官方调色板里唯一的非颜色变量，fork 时最容易漏。 */
+  --fc-classic-small-dot-width: 8px;
+  --fc-classic-large-dot-width: 10px;
+
+  /* buttons —— 内置按钮基本不出现（工具栏是我们自己画的），
+     只是别让日历内部的空状态按钮变成默认灰蓝。 */
+  --fc-classic-button: var(--primary);
+  --fc-classic-button-border: var(--border);
+  --fc-classic-button-strong: var(--primary);
+  --fc-classic-button-strong-border: var(--border);
+  --fc-classic-button-outline: var(--border);
+  --fc-classic-button-foreground: var(--primary-foreground);
+}
+
+/*
+ * 乐观插入、还没从数据库拿到真实 id 的那条。
+ *
+ * 类名由 lib/appointments.js 的 toCalendarEvent 通过事件的 className 传进去 ——
+ * 这是 v7 留下的少数几个不走哈希的入口（内部类名如 .fc-classic-n5m 是编译期
+ * 生成的，不能直接写选择器）。
+ */
+.apt-pending {
+  opacity: 0.55;
+}
+
+/* 日历自己会算高度，这里只保证 flex 容器不塌。 */
+.schedule-calendar {
+  min-height: 0;
+}
