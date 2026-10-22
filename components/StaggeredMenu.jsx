@@ -415,6 +415,13 @@ export const StaggeredMenu = ({
       </header>
 
       <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
+        {/* The header's toggle sits behind the open panel, so the panel gets its
+            own close button at its top-left corner. */}
+        <button type="button" className="sm-panel-close" aria-label="关闭菜单" onClick={closeMenu}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
         <div className="sm-panel-inner">
           <ul className="sm-panel-list" role="list" data-numbering={displayItemNumbering || undefined}>
             {items && items.length ? (
